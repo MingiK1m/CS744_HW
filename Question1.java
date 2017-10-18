@@ -21,9 +21,12 @@ public class Question1 {
 
 	public static void main(String[] args) throws Exception {
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		DataStream<Tuple2<String, Integer>> stream = 
-				env.addSource(DataSource.create())
-				.assignTimestampsAndWatermarks(new AscendingTimestampExtractor<Tuple4<Integer,Integer,Long,String>>() {
+		DataStream<Tuple4<Integer,Integer,Long,String>> stream = 
+				env.addSource(DataSource.create());
+
+		stream.print();
+		
+		stream.assignTimestampsAndWatermarks(new AscendingTimestampExtractor<Tuple4<Integer,Integer,Long,String>>() {
 
 					@Override
 					public long extractAscendingTimestamp(Tuple4<Integer, Integer, Long, String> arg0) {
@@ -43,9 +46,7 @@ public class Question1 {
 				.window(TumblingEventTimeWindows.of(Time.minutes(1)))
 				.sum(1);
 		
-		System.out.println("++ Print ----");
 		stream.print();
-		System.out.println("-- Print ----");
 		
 		env.execute();
 	}
