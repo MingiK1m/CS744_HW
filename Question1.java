@@ -11,6 +11,7 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
+import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
 import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
@@ -22,16 +23,11 @@ public class Question1 {
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		DataStream<Tuple2<String, Integer>> stream = 
 				env.addSource(DataSource.create())
-				.assignTimestampsAndWatermarks(new AssignerWithPeriodicWatermarks<Tuple4<Integer,Integer,Long,String>>() {
-					
+				.assignTimestampsAndWatermarks(new AscendingTimestampExtractor<Tuple4<Integer,Integer,Long,String>>() {
+
 					@Override
-					public long extractTimestamp(Tuple4<Integer, Integer, Long, String> arg0, long arg1) {
+					public long extractAscendingTimestamp(Tuple4<Integer, Integer, Long, String> arg0) {
 						return arg0.f2;
-					}
-					
-					@Override
-					public Watermark getCurrentWatermark() {
-						return null;
 					}
 				})
 				.flatMap(new FlatMapFunction<Tuple4<Integer,Integer,Long,String>, Tuple2<String, Integer>>(){
@@ -47,7 +43,9 @@ public class Question1 {
 				.window(TumblingEventTimeWindows.of(Time.minutes(1)))
 				.sum(1);
 		
+		System.out.println("++ Print ----");
 		stream.print();
+		System.out.println("-- Print ----");
 		
 		env.execute();
 	}
