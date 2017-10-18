@@ -4,49 +4,43 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 
-import org.apache.flink.api.common.functions.FlatMapFunction;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.WindowedStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
-import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
-import org.apache.flink.util.Collector;
 
 public class Question1 {
 
 	public static void main(String[] args) throws Exception {
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+		env.setParallelism(0);
+		
 		DataStream<Tuple4<Integer,Integer,Long,String>> stream = 
 				env.addSource(DataSource.create());
-
-		stream.print();
 		
-		stream.assignTimestampsAndWatermarks(new AscendingTimestampExtractor<Tuple4<Integer,Integer,Long,String>>() {
+		WindowedStream data = stream.assignTimestampsAndWatermarks(new AscendingTimestampExtractor<Tuple4<Integer,Integer,Long,String>>() {
 
 					@Override
 					public long extractAscendingTimestamp(Tuple4<Integer, Integer, Long, String> arg0) {
 						return arg0.f2;
 					}
 				})
-				.flatMap(new FlatMapFunction<Tuple4<Integer,Integer,Long,String>, Tuple2<String, Integer>>(){
-
-					@Override
-					public void flatMap(Tuple4<Integer, Integer, Long, String> tuple, Collector<Tuple2<String, Integer>> out)
-							throws Exception {
-						out.collect(new Tuple2<String,Integer>(tuple.f3, 1));
-					}
-
-				})
-				.keyBy(0)
-				.window(TumblingEventTimeWindows.of(Time.minutes(1)))
-				.sum(1);
-		
-		stream.print();
+				.keyBy(3)
+				.window(TumblingEventTimeWindows.of(Time.minutes(1)));
+//				.apply(new WindowFunction<Tuple4<Integer,Integer,Long,String>, String, Tuple, TimeWindow>() {
+//
+//					@Override
+//					public void apply(Tuple arg0, TimeWindow arg1,
+//							Iterable<Tuple4<Integer, Integer, Long, String>> arg2, Collector<String> arg3)
+//							throws Exception {
+//						// TODO Auto-generated method stub
+//						
+//					}
+//				});
 		
 		env.execute();
 	}
