@@ -1,3 +1,5 @@
+package com.group29.partc;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -7,7 +9,9 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import org.apache.flink.streaming.api.functions.AssignerWithPeriodicWatermarks;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
+import org.apache.flink.streaming.api.watermark.Watermark;
 import org.apache.flink.streaming.api.windowing.assigners.TumblingEventTimeWindows;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.Collector;
@@ -18,6 +22,18 @@ public class Question1 {
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		DataStream<Tuple2<String, Integer>> stream = 
 				env.addSource(DataSource.create())
+				.assignTimestampsAndWatermarks(new AssignerWithPeriodicWatermarks<Tuple4<Integer,Integer,Long,String>>() {
+					
+					@Override
+					public long extractTimestamp(Tuple4<Integer, Integer, Long, String> arg0, long arg1) {
+						return arg0.f2;
+					}
+					
+					@Override
+					public Watermark getCurrentWatermark() {
+						return null;
+					}
+				})
 				.flatMap(new FlatMapFunction<Tuple4<Integer,Integer,Long,String>, Tuple2<String, Integer>>(){
 
 					@Override
@@ -67,9 +83,7 @@ public class Question1 {
 					if ((count++) % 10 == 0) {
 						Thread.sleep(1);
 					}
-					Tuple4<Integer, Integer, Long, String> tuple = genTuple(line);
-					ctx.collectWithTimestamp(tuple, tuple.f2);
-//					ctx.collect(genTuple(line));
+					ctx.collect(genTuple(line));
 				}
 
 			} catch (Exception e) {
