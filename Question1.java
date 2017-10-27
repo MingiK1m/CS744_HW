@@ -6,6 +6,7 @@ import java.io.FileReader;
 
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
@@ -22,24 +23,13 @@ import org.apache.flink.util.Collector;
 public class Question1 {
 
 	public static void main(String[] args) throws Exception {
-		boolean isSlide = false;
-		
-		if(args.length != 1){
-			System.out.println("Usage : java Question1 [slide|nonslide]");
+		ParameterTool params = ParameterTool.fromArgs(args);
+		if(params.has("slidingWindow")){
+			System.out.println("Need \"slide\" parameter ( --slide={true|false} )");
 			System.exit(0);
-		} else {
-			switch(args[0]){
-			case "slide":
-				isSlide = true;
-				break;
-			case "nonslide":
-				isSlide = false;
-				break;
-			default:
-				System.out.println("Usage : java Question1 [slide|nonslide]");
-				System.exit(0);
-			}
 		}
+		
+		boolean isSlide = params.getBoolean("slidingWindow");
 			
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);

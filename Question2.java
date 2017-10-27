@@ -6,6 +6,7 @@ import java.io.FileReader;
 
 import org.apache.flink.api.java.functions.KeySelector;
 import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.datastream.KeyedStream;
@@ -21,20 +22,14 @@ import org.apache.flink.util.Collector;
 
 public class Question2 {
 
-	public static void main(String[] args) throws Exception {
-		int allowedTimeSec = 0;
-		
-		if(args.length != 1){
-			System.out.println("Usage : java Question2 {allowedTimeSec}");
+	public static void main(String[] args) throws Exception {		
+		ParameterTool params = ParameterTool.fromArgs(args);
+		if(!params.has("allowedTime")){
+			System.out.println("Need \"allowedTime\" parameter ( --allowedTime=[allowed time in seconds]");
 			System.exit(0);
-		} else {
-			try{
-				allowedTimeSec = Integer.parseInt(args[0]);
-			} catch (Exception e){
-				System.out.println("Usage : java Question2 {allowedTimeSec}");
-				System.exit(0);				
-			}
 		}
+			
+		int allowedTimeSec = params.getInt("allowedTime");
 			
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
