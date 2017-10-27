@@ -25,7 +25,7 @@ public class Question1 {
 	public static void main(String[] args) throws Exception {
 		ParameterTool params = ParameterTool.fromArgs(args);
 		if(!params.has("slidingWindow")){
-			System.out.println("Need \"slide\" parameter ( --slide {true|false} )");
+			System.out.println("Need \"slidingWindow\" parameter ( --slidingWindow {true|false} )");
 			System.exit(0);
 		}
 		
@@ -117,7 +117,7 @@ public class Question1 {
 					}
 					ctx.collect(genTuple(line));
 				}
-
+				br.close();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
