@@ -19,25 +19,20 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
 
-public class Question1 {
+public class Question2 {
 
 	public static void main(String[] args) throws Exception {
-		boolean isSlide = false;
+		int allowedTimeSec = 0;
 		
 		if(args.length != 1){
-			System.out.println("Usage : java Question1 [slide|nonslide]");
+			System.out.println("Usage : java Question2 {allowedTimeSec}");
 			System.exit(0);
 		} else {
-			switch(args[0]){
-			case "slide":
-				isSlide = true;
-				break;
-			case "nonslide":
-				isSlide = false;
-				break;
-			default:
-				System.out.println("Usage : java Question1 [slide|nonslide]");
-				System.exit(0);
+			try{
+				allowedTimeSec = Integer.parseInt(args[0]);
+			} catch (Exception e){
+				System.out.println("Usage : java Question2 {allowedTimeSec}");
+				System.exit(0);				
 			}
 		}
 			
@@ -47,7 +42,7 @@ public class Question1 {
 		DataStream<Tuple4<Integer,Integer,Long,String>> stream = 
 				env.addSource(DataSource.create());
 		
-		KeyedStream<Tuple4<Integer,Integer,Long,String>,String> kStream = 
+		DataStream<String> result =
 				stream.assignTimestampsAndWatermarks(new AscendingTimestampExtractor<Tuple4<Integer,Integer,Long,String>>() {
 					@Override
 					public long extractAscendingTimestamp(Tuple4<Integer, Integer, Long, String> arg0) {
@@ -59,19 +54,10 @@ public class Question1 {
 					public String getKey(Tuple4<Integer, Integer, Long, String> arg0) throws Exception {
 						return arg0.f3;
 					}
-				});
-		
-		
-		WindowedStream<Tuple4<Integer,Integer,Long,String>, String, TimeWindow> wStream;
-				
-		if(isSlide){
-			wStream = kStream.timeWindow(Time.minutes(1), Time.seconds(1));
-		} else {
-			wStream = kStream.window(TumblingEventTimeWindows.of(Time.minutes(1)));
-		}
-				 
-		DataStream<String> result =
-				wStream.apply(new WindowFunction<Tuple4<Integer,Integer,Long,String>, String, String, TimeWindow>() {
+				})
+				.window(TumblingEventTimeWindows.of(Time.minutes(1)))
+				.allowedLateness(Time.seconds(allowedTimeSec))
+				.apply(new WindowFunction<Tuple4<Integer,Integer,Long,String>, String, String, TimeWindow>() {
 					@Override
 					public void apply(String key, TimeWindow window,
 							Iterable<Tuple4<Integer, Integer, Long, String>> input, Collector<String> output)
@@ -100,7 +86,7 @@ public class Question1 {
 		private static final long serialVersionUID = 1L;
 		
 		private volatile boolean running = true;
-		private final String filename = "/home/ubuntu/assignment2/partc/higgs-activity_time.txt"; // Q1
+		private final String filename = "/home/ubuntu/assignment2/partc/higgs-activity_time_late_arrive.txt"; // Q2
 
 		private DataSource() {
 
