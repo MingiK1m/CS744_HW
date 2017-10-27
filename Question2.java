@@ -25,7 +25,7 @@ public class Question2 {
 	public static void main(String[] args) throws Exception {		
 		ParameterTool params = ParameterTool.fromArgs(args);
 		if(!params.has("allowedTime")){
-			System.out.println("Need \"allowedTime\" parameter ( --allowedTime=[allowed time in seconds]");
+			System.out.println("Need \"allowedTime\" parameter ( --allowedTime [allowed time in seconds]");
 			System.exit(0);
 		}
 			

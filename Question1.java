@@ -24,8 +24,8 @@ public class Question1 {
 
 	public static void main(String[] args) throws Exception {
 		ParameterTool params = ParameterTool.fromArgs(args);
-		if(params.has("slidingWindow")){
-			System.out.println("Need \"slide\" parameter ( --slide={true|false} )");
+		if(!params.has("slidingWindow")){
+			System.out.println("Need \"slide\" parameter ( --slide {true|false} )");
 			System.exit(0);
 		}
 		
