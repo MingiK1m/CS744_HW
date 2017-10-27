@@ -5,11 +5,11 @@ import java.io.File;
 import java.io.FileReader;
 
 import org.apache.flink.api.java.functions.KeySelector;
-import org.apache.flink.api.java.tuple.Tuple;
 import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStream;
+import org.apache.flink.streaming.api.datastream.KeyedStream;
 import org.apache.flink.streaming.api.datastream.WindowedStream;
-import org.apache.flink.streaming.api.environment.LocalStreamEnvironment;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.RichSourceFunction;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
@@ -22,32 +22,56 @@ import org.apache.flink.util.Collector;
 public class Question1 {
 
 	public static void main(String[] args) throws Exception {
+		boolean isSlide = false;
+		
+		if(args.length != 1){
+			System.out.println("Usage : java Question1 [slide|nonslide]");
+			System.exit(0);
+		} else {
+			switch(args[0]){
+			case "slide":
+				isSlide = true;
+				break;
+			case "nonslide":
+				isSlide = false;
+				break;
+			default:
+				System.out.println("Usage : java Question1 [slide|nonslide]");
+				System.exit(0);
+			}
+		}
+			
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-		env.setParallelism(0);
+		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 		
 		DataStream<Tuple4<Integer,Integer,Long,String>> stream = 
 				env.addSource(DataSource.create());
 		
-		
-		DataStream<String> result = 
+		KeyedStream<Tuple4<Integer,Integer,Long,String>,String> kStream = 
 				stream.assignTimestampsAndWatermarks(new AscendingTimestampExtractor<Tuple4<Integer,Integer,Long,String>>() {
-					private static final long serialVersionUID = 1L;
-
 					@Override
 					public long extractAscendingTimestamp(Tuple4<Integer, Integer, Long, String> arg0) {
-						return arg0.f2;
+						return arg0.f2 * 1000;
 					}
 				})
 				.keyBy(new KeySelector<Tuple4<Integer,Integer,Long,String>, String>() {
-
 					@Override
 					public String getKey(Tuple4<Integer, Integer, Long, String> arg0) throws Exception {
 						return arg0.f3;
 					}
-				})
-				.window(TumblingEventTimeWindows.of(Time.minutes(1)))
-				.apply(new WindowFunction<Tuple4<Integer,Integer,Long,String>, String, String, TimeWindow>() {
-
+				});
+		
+		
+		WindowedStream<Tuple4<Integer,Integer,Long,String>, String, TimeWindow> wStream;
+				
+		if(isSlide){
+			wStream = kStream.timeWindow(Time.minutes(1), Time.seconds(1));
+		} else {
+			wStream = kStream.window(TumblingEventTimeWindows.of(Time.minutes(1)));
+		}
+				 
+		DataStream<String> result =
+				wStream.apply(new WindowFunction<Tuple4<Integer,Integer,Long,String>, String, String, TimeWindow>() {
 					@Override
 					public void apply(String key, TimeWindow window,
 							Iterable<Tuple4<Integer, Integer, Long, String>> input, Collector<String> output)
@@ -76,7 +100,8 @@ public class Question1 {
 		private static final long serialVersionUID = 1L;
 		
 		private volatile boolean running = true;
-		private final String filename = "/home/ubuntu/assignment2/partc/higgs-activity_time.txt";
+//		private final String filename = "/home/ubuntu/assignment2/partc/higgs-activity_time.txt"; // Q1
+		private final String filename = "/home/ubuntu/assignment2/partc/higgs-activity_time.txt"; // Q2
 
 		private DataSource() {
 
