@@ -28,6 +28,7 @@ public class Question2 {
 		}
 			
 		int allowedTimeSec = params.getInt("allowedTime");
+		String outputPath = params.get("output", "PartCQuestion2_" + allowedTimeSec + "_output.txt");
 			
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
@@ -67,7 +68,7 @@ public class Question2 {
 					}
 				});
 		
-		result.print();
+		result.writeAsText(outputPath);
 		
 		env.execute();
 	}

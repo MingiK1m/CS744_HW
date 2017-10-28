@@ -30,6 +30,7 @@ public class Question1 {
 		}
 		
 		boolean isSlide = params.getBoolean("slidingWindow");
+		String outputPath = params.get("output", "PartCQuestion2_slide_" + isSlide +"_output.txt");
 			
 		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 		env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
@@ -78,7 +79,7 @@ public class Question1 {
 					}
 				});
 		
-		result.print();
+		result.writeAsText(outputPath);
 		
 		env.execute();
 	}
